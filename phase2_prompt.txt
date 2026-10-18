@@ -1,0 +1,44 @@
+<USER_REQUEST>
+Note: I just added typeable search for the start/end fields and /api/nearest labelling. In Part 0, skip anything that is already implemented (check first, don't rewrite working code) and do only what's still missing. Part 0 item 1 (divergent demo presets) is still needed.
+
+Phase 1 (route planner) is done and working. Same project, same stack (Flask, SQLite, vanilla JS + Leaflet, OSMnx/NetworkX). Do NOT break Phase 1. Now build PHASE 2: incident reporting, community verification (voting), and the community safety feed. SOS/Twilio is still NOT in scope.
+
+## Part 0: small Phase 1 fixes (do these first)
+1. Add 3 demo route presets in config.py (button list "Demo routes") where the shortest and safest routes clearly DIVERGE at 22:00 (safest should avoid a low-lit lane/cluster of incidents). Verify programmatically: for each preset print distance and route overlap % at 18:00 and 23:00. Recalibrate seed clusters/K if routes overlap more than ~70%. Also verify that at 18:00 there are visibly SAFE (green) segments and that several segments change band by 23:00.
+2. Label start/end by the nearest street name instead of raw coordinates (add GET /api/nearest?lat&lon -> {street_name, edge_id, snapped_lat, snapped_lon, in_area}).
+3. Add a small "Demo data: seeded" badge in the UI footer.
+
+## Part 1: Auth (lightweight, hackathon-grade)
+- Flask sessions + werkzeug password hashing. Endpoints: POST /api/auth/register (name, phone-or-email, password), POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me.
+- Seed 5 demo users (Asha, Riya, Meera, Kabir, Zoya) with a known demo password.
+- DEMO_MODE flag in config.py (default True): shows an "Acting as: [user]" switcher in the UI so I can demo two different users voting without logging out and in. Also in DEMO_MODE the browser location check can be simulated (see Part 3).
+- Additive DB migration only (inspect the existing schema first, ALTER TABLE or create missing tables). Do not drop or recreate existing tables or lose seed data.
+
+## Part 2: Incid
+<truncated 4046 bytes>
+ incidents": feed sorted by recency (toggle: nearest first), each item shows type icon, street name, time, confirmation count, and an "I saw this too" button. Filters: last 24 h / 7 days / 30 days and by type.
+- Verified incidents appear on the main map as pins (icon per type) with a popup (type, time, confirmations). Pending reports are NEVER shown on the main map outside the Verify tab.
+- Toasts for all errors (too far away, already voted, own report, rate limit).
+- Keep the existing dark UI with accent #E91E8C.
+
+## Part 6: Tests and verification
+- Add pytest tests for: self-vote rejected, duplicate vote rejected, far-away vote rejected, threshold flips status exactly at the configured count, pending incidents don't affect scores, verification changes the edge score, rate limit enforced, duplicate-report detection.
+- Add a scripted end-to-end check (script or test) that simulates the demo: user A reports on a lane on the safest demo route, users B and C vote, status becomes verified, the route score at 23:00 drops versus before.
+- Update README with: new endpoints, config flags (DEMO_MODE, VERIFY_THRESHOLD, VOTE_RADIUS_M), and a Phase 2 demo script.
+
+## Process
+Give me a short plan first, then implement in milestones: (0) Part 0 fixes, (1) auth + migration, (2) reporting API, (3) voting API + threshold, (4) scoring integration, (5) frontend tabs, (6) tests + README. Run and verify after each milestone, and do not add features beyond this scope. Ask me if anything is ambiguous.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-13T22:33:49+05:30.
+
+The user's current state is as follows:
+Active Document: c:\RakshaNet\config.py (LANGUAGE_PYTHON)
+Cursor is on line: 45
+Other open documents:
+- c:\RakshaNet\config.py (LANGUAGE_PYTHON)
+- c:\RakshaNet\verify_search.py (LANGUAGE_PYTHON)
+Browser State:
+  Page 58E63F4D63F372444BA8951A3583B5F5 (RakshaNet — Safe Route Planner for Women | Delhi) - http://localhost:5000/ [ACTIVE]
+    Viewport: 1536x730, Page Height: 729
+</ADDITIONAL_METADATA>

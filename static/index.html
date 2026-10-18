@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RakshaNet — Safe Route Planner for Women | Delhi</title>
+  <meta name="description" content="RakshaNet helps women commuting in Delhi find the safest route, not just the fastest. Real-time safety scores, time-aware street analysis, community incident reporting, and verification." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Smart SOS CSS -->
+  <link rel="stylesheet" href="sos.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════ SIDEBAR ══════════════════════════════════ -->
+<aside id="sidebar" class="sidebar">
+
+  <!-- Header / Brand -->
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="RakshaNet shield logo">
+        <path d="M20 3L5 9v10c0 9.4 6.4 18.2 15 20.5C29.6 37.2 36 28.4 36 19V9L20 3z"
+              fill="url(#shield-grad)" />
+        <path d="M14 20l4.5 4.5L27 15" stroke="white" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="shield-grad" x1="5" y1="3" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#E91E8C"/>
+            <stop offset="1" stop-color="#9C27B0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <span class="brand-name">Raksha<span class="brand-accent">Net</span></span>
+      <span class="brand-tagline">Women's Safety Navigator</span>
+    </div>
+  </div>
+
+  <!-- User Status & Demo Switcher Bar -->
+  <div class="user-header-row" id="user-header-row">
+    <div class="user-info-pill" id="user-info-pill">
+      <span class="user-avatar" id="user-avatar">A</span>
+      <div class="user-details">
+        <span class="user-name" id="user-display-name">Asha</span>
+        <span class="user-role" id="user-role-label">Community Member</span>
+      </div>
+    </div>
+
+    <div class="user-actions">
+      <div class="demo-switcher" id="demo-switcher-wrap">
+        <label for="demo-user-select" class="switcher-label">Acting as:</label>
+        <select id="demo-user-select" class="demo-select" aria-label="Switch active demo user">
+          <option value="user_asha">Asha</option>
+          <option value="user_riya">Riya</option>
+          <option value="user_meera">Meera</option>
+          <option value="user_kabir">Kabir</option>
+          <option value="user_zoya">Zoya</option>
+        </select>
+      </div>
+      <button class="btn-text-sm" id="btn-auth-action" title="Account login">Log Out</button>
+      <button class="btn-text-sm" id="sos-btn-safety" title="Safety Settings & Trusted Contacts">⚙️ Safety</button>
+    </div>
+  </div>
+
+  <!-- Sidebar Nav Tabs (Route | Report | Verify & Feed) -->
+  <nav class="sidebar-nav-tabs" role="tablist" aria-label="Main Navigation">
+    <button class="nav-tab active" id="tab-btn-route" role="tab" aria-selected="true" data-tab="route">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+      </svg>
+      <span>Route</span>
+    </button>
+    <button class="nav-tab" id="tab-btn-report" role="tab" aria-selected="false" data-tab="report">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <span>Report</span>
+    </button>
+    <button class="nav-tab" id="tab-btn-verify" role="tab" aria-selected="false" data-tab="verify">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+      </svg>
+      <span>Verify & Feed</span>
+    </button>
+  </nav>
+
+  <!-- ══════════════ TAB 1: ROUTE ══════════════ -->
+  <div class="tab-pane active" id="pane-route">
+
+    <!-- Planner Card -->
+    <div class="card" id="planner-card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+        Route Planner
+      </div>
+
+      <!-- Location Inputs -->
+      <div class="input-group">
+        <label class="input-label" for="start-input">
+          <span class="dot dot-start">A</span> Start Location
+        </label>
+        <div class="ac-wrapper" id="start-ac-wrapper">
+          <div class="input-row">
+            <input id="start-input" class="loc-input" type="text"
+                   placeholder="Search street or click map…" autocomplete="off"
+                   aria-autocomplete="list" aria-controls="start-dropdown" />
+            <button class="icon-btn" id="btn-geolocate" title="Use my location" aria-label="Use my current location">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8" stroke-dasharray="2 3"/></svg>
+            </button>
+            <button class="icon-btn icon-btn-clear hidden" id="start-clear" title="Clear start" aria-label="Clear start point">✕</button>
+          </div>
+          <ul class="ac-dropdown hidden" id="start-dropdown" role="listbox" aria-label="Start location suggestions"></ul>
+        </div>
+      </div>
+
+      <!-- Swap A ↔ B -->
+      <div class="swap-row">
+        <button class="swap-btn" id="btn-swap" title="Swap start and end" aria-label="Swap start and end locations">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" for="end-input">
+          <span class="dot dot-end">B</span> End Location
+        </label>
+        <div class="ac-wrapper" id="end-ac-wrapper">
+          <div class="input-row">
+            <input id="end-input" class="loc-input" type="text"
+                   placeholder="Search street or click map…" autocomplete="off"
+                   aria-autocomplete="list" aria-controls="end-dropdown" />
+            <button class="icon-btn icon-btn-clear hidden" id="end-clear" title="Clear end" aria-label="Clear end point">✕</button>
+          </div>
+          <ul class="ac-dropdown hidden" id="end-dropdown" role="listbox" aria-label="End location suggestions"></ul>
+        </div>
+      </div>
+
+      <!-- Demo Route Presets -->
+      <div class="demo-presets-group">
+        <div class="presets-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Demo Routes (Divergent at 22:00)
+        </div>
+        <div class="presets-buttons" id="demo-presets-container">
+          <button class="btn btn-outline preset-btn active-preset" id="btn-sample" data-preset="hkv_to_metro" title="Hauz Khas Village → Green Park Metro">
+            HK Village → Green Park
+          </button>
+          <button class="btn btn-outline preset-btn" data-preset="safdarjung_to_deerpark" title="Safdarjung Enclave → Deer Park">
+            Safdarjung → Deer Park
+          </button>
+          <button class="btn btn-outline preset-btn" data-preset="deerpark_to_safdarjung" title="Deer Park Lake → Safdarjung Club">
+            Deer Park Lake → Club
+          </button>
+        </div>
+      </div>
+
+      <!-- Time Selector -->
+      <div class="section-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Time of Day
+      </div>
+
+      <div class="time-chips" id="time-chips" role="group" aria-label="Select time of day">
+        <button class="chip chip-active" data-value="now" id="chip-now">Right now</button>
+        <button class="chip" data-value="18" id="chip-18">6 PM</button>
+        <button class="chip" data-value="21" id="chip-21">9 PM</button>
+        <button class="chip" data-value="23" id="chip-23">11 PM</button>
+      </div>
+
+      <div class="slider-row">
+        <span class="slider-label">0h</span>
+        <input id="hour-slider" type="range" min="0" max="23" value="18"
+               class="hour-slider" aria-label="Select hour" />
+        <span class="slider-label">23h</span>
+        <span class="slider-val" id="slider-val-display">18:00</span>
+      </div>
+
+      <!-- Heatmap toggle -->
+      <div class="toggle-row">
+        <label class="toggle-label" for="toggle-heatmap">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          Show Safety Heatmap
+        </label>
+        <label class="switch" aria-label="Toggle heatmap">
+          <input type="checkbox" id="toggle-heatmap" />
+          <span class="slider-switch"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Results Card (hidden until route computed) -->
+    <div class="card card-results hidden" id="results-card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Route Comparison
+      </div>
+
+      <!-- Verdict Banner -->
+      <div class="verdict-banner" id="verdict-banner">
+        <span class="verdict-icon">⚡</span>
+        <span id="verdict-text">—</span>
+      </div>
+
+      <!-- Tabs: Safest vs Shortest -->
+      <div class="route-tabs">
+        <button class="route-tab active" id="tab-safest">
+          Safest Route
+          <span class="badge badge-accent">Recommended</span>
+        </button>
+        <button class="route-tab" id="tab-shortest">
+          Shortest Route
+        </button>
+      </div>
+
+      <!-- Safest panel -->
+      <div class="route-panel" id="panel-safest" role="tabpanel">
+        <div class="stat-grid" id="stats-safest"></div>
+      </div>
+
+      <!-- Shortest panel -->
+      <div class="route-panel hidden" id="panel-shortest" role="tabpanel">
+        <div class="stat-grid" id="stats-shortest"></div>
+      </div>
+
+      <!-- Segment breakdown -->
+      <div class="segment-breakdown" id="segment-breakdown"></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="card card-legend">
+      <div class="card-title">Legend</div>
+      <div class="legend-items">
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#4CAF50"></span>
+          <div>
+            <strong>Safe</strong>
+            <small>Score ≥ 70 — well-lit, active</small>
+          </div>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#FF9800"></span>
+          <div>
+            <strong>Caution</strong>
+            <small>Score 40–69 — moderate risk</small>
+          </div>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#F44336"></span>
+          <div>
+            <strong>Avoid</strong>
+            <small>Score &lt; 40 — high risk</small>
+          </div>
+        </div>
+        <div class="legend-item">
+          <span class="legend-line legend-safest"></span>
+          <div><strong>Safest Route</strong> <small>thick solid</small></div>
+        </div>
+        <div class="legend-item">
+          <span class="legend-line legend-shortest"></span>
+          <div><strong>Shortest Route</strong> <small>thin dashed</small></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════ TAB 2: REPORT ══════════════ -->
+  <div class="tab-pane hidden" id="pane-report">
+    <div class="card" id="report-card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        Report Safety Hazard
+      </div>
+
+      <p class="card-desc">Help warn other women by reporting dark spots, harassment, or unsafe conditions. Reports become verified after community confirmations.</p>
+
+      <!-- Location Selection -->
+      <div class="form-group">
+        <label class="input-label">Incident Location</label>
+        <div class="report-loc-card" id="report-loc-box">
+          <div class="loc-text-col">
+            <span class="loc-name-strong" id="report-loc-name">Click map to pick location</span>
+            <span class="loc-coord-sub" id="report-loc-coords">Lat/Lon will snap to nearest street</span>
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-report-pick-map">Set from Map</button>
+        </div>
+      </div>
+
+      <!-- Incident Type Grid -->
+      <div class="form-group">
+        <label class="input-label">Hazard / Incident Type</label>
+        <div class="type-picker-grid" id="type-picker-grid">
+          <button type="button" class="type-btn active" data-type="poor_lighting">
+            <span class="type-emoji">💡</span>
+            <span class="type-label">Poor Lighting</span>
+          </button>
+          <button type="button" class="type-btn" data-type="harassment">
+            <span class="type-emoji">🗣️</span>
+            <span class="type-label">Harassment</span>
+          </button>
+          <button type="button" class="type-btn" data-type="unsafe_area">
+            <span class="type-emoji">⚠️</span>
+            <span class="type-label">Unsafe Area</span>
+          </button>
+          <button type="button" class="type-btn" data-type="other">
+            <span class="type-emoji">❓</span>
+            <span class="type-label">Other Risk</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Time of Occurrence -->
+      <div class="form-group">
+        <label class="input-label">When Did It Happen?</label>
+        <div class="time-chips" id="report-time-chips">
+          <button type="button" class="chip chip-active" data-val="now">Now</button>
+          <button type="button" class="chip" data-val="1h">1h ago</button>
+          <button type="button" class="chip" data-val="today">Earlier today</button>
+          <button type="button" class="chip" data-val="custom">Custom</button>
+        </div>
+        <div class="custom-time-row hidden" id="custom-time-row">
+          <input type="datetime-local" id="report-custom-time" class="loc-input" />
+        </div>
+      </div>
+
+      <!-- Optional Note -->
+      <div class="form-group">
+        <div class="label-with-count">
+          <label class="input-label" for="report-note-input">Details / Note (Optional)</label>
+          <span class="char-count" id="report-char-count">0/200</span>
+        </div>
+        <textarea id="report-note-input" class="report-textarea" maxlength="200" placeholder="e.g. Broken streetlights near the tea stall, very deserted after 9 PM…"></textarea>
+      </div>
+
+      <!-- Duplicate 409 Notice (shown on conflict) -->
+      <div class="card-alert-box hidden" id="duplicate-conflict-box">
+        <div class="alert-title">⚠️ Similar Report Nearby</div>
+        <p id="duplicate-conflict-msg">A report of this type already exists within 50m. Confirming the existing report will speed up verification.</p>
+        <button class="btn btn-accent" id="btn-confirm-duplicate">I Saw This Too (Confirm Existing)</button>
+      </div>
+
+      <!-- Submit Button -->
+      <button class="btn btn-primary" id="btn-submit-report">
+        Submit Incident Report
+      </button>
+
+      <!-- Success Feedback State -->
+      <div class="report-success-box hidden" id="report-success-box">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Report Submitted!</div>
+        <p id="report-success-msg">Needs 2 more community confirmations to go live on the public safety map.</p>
+        <button class="btn btn-outline" id="btn-report-another">Report Another Hazard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB 3: VERIFY & FEED ══════════════ -->
+  <div class="tab-pane hidden" id="pane-verify">
+
+    <!-- Demo Simulation Info -->
+    <div class="demo-sim-banner" id="demo-sim-banner">
+      <div class="sim-badge">DEMO SIMULATOR ACTIVE</div>
+      <p class="sim-desc">You can confirm reports as different users using the switcher above. Geolocation is simulated within verification range.</p>
+    </div>
+
+    <!-- Section A: Needs Verification Nearby (Pending) -->
+    <div class="card" id="verify-pending-card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Needs Verification Nearby
+      </div>
+      <p class="card-desc">Help verify recent community alerts. 2+ confirmations activate the warning on everyone's map.</p>
+
+      <div class="pending-list" id="pending-list-container">
+        <div class="empty-state" id="pending-empty-state">No pending reports nearby right now.</div>
+      </div>
+    </div>
+
+    <!-- Section B: Community Safety Feed (Verified) -->
+    <div class="card" id="verified-feed-card">
+      <div class="card-title">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Community Safety Feed
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="feed-filters">
+        <div class="feed-filter-chips" id="feed-time-chips">
+          <button class="chip chip-active" data-hours="24">24h</button>
+          <button class="chip" data-hours="168">7 days</button>
+          <button class="chip" data-hours="720">30 days</button>
+        </div>
+        <select class="feed-type-select" id="feed-type-select" aria-label="Filter incidents by type">
+          <option value="">All Types</option>
+          <option value="poor_lighting">Poor Lighting</option>
+          <option value="harassment">Harassment</option>
+          <option value="unsafe_area">Unsafe Area</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="feed-list" id="verified-feed-container">
+        <div class="empty-state">Loading verified reports…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <span class="badge-seeded" id="badge-seeded">🌱 Demo data: seeded</span>
+  </div>
+
+</aside>
+
+<!-- ════════════════════════════════ MAP ═════════════════════════════════════ -->
+<main id="map-container">
+  <div id="map" aria-label="Safety route map of Delhi"></div>
+
+  <!-- Map instruction tooltip -->
+  <div class="map-hint" id="map-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+    </svg>
+    Click map to set <strong id="hint-next">Start</strong> point
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="map-overlay hidden" id="loading-overlay">
+    <div class="spinner-ring"></div>
+    <p id="loading-text">Computing safest route…</p>
+  </div>
+
+  <!-- Error toast -->
+  <div class="toast hidden" id="error-toast" role="alert"></div>
+</main>
+
+<!-- ══════════════════════════════ SOS BUTTON ════════════════════════════════ -->
+<button class="sos-btn" id="sos-btn" aria-label="SOS Emergency Button">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  SOS
+</button>
+
+<!-- ════════════════════════════ AUTH MODAL ══════════════════════════════════ -->
+<div class="modal-backdrop hidden" id="auth-modal-backdrop">
+  <div class="auth-modal-dialog">
+    <button class="modal-close" id="btn-close-auth-modal" aria-label="Close modal">✕</button>
+    <div class="auth-modal-header">
+      <h3 id="auth-modal-title">Log In to RakshaNet</h3>
+      <p id="auth-modal-desc">Access community verification and reporting</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab-btn active" id="btn-tab-login">Log In</button>
+      <button class="auth-tab-btn" id="btn-tab-register">Register</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="form-login" class="auth-form">
+      <div class="form-group">
+        <label class="input-label" for="login-identifier">Email or Phone</label>
+        <input type="text" id="login-identifier" class="loc-input" placeholder="e.g. asha@rakshanet.in" required />
+      </div>
+      <div class="form-group">
+        <label class="input-label" for="login-password">Password</label>
+        <input type="password" id="login-password" class="loc-input" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="form-register" class="auth-form hidden">
+      <div class="form-group">
+        <label class="input-label" for="reg-name">Your Name</label>
+        <input type="text" id="reg-name" class="loc-input" placeholder="e.g. Priya Sharma" required />
+      </div>
+      <div class="form-group">
+        <label class="input-label" for="reg-identifier">Email or Phone</label>
+        <input type="text" id="reg-identifier" class="loc-input" placeholder="e.g. priya@example.com" required />
+      </div>
+      <div class="form-group">
+        <label class="input-label" for="reg-password">Password</label>
+        <input type="password" id="reg-password" class="loc-input" placeholder="At least 4 characters" required minlength="4" />
+      </div>
+      <button type="submit" class="btn btn-primary">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- App JS -->
+<script src="app.js"></script>
+
+<!-- ══════════════════════════════ SMART SOS ROOTS ═══════════════════════════ -->
+<div id="sos-overlay-root"></div>
+<div id="sos-safety-modal-root"></div>
+<div id="sos-inbox-root"></div>
+
+<!-- Smart SOS JS -->
+<script defer src="sos.js"></script>
+</body>
+</html>

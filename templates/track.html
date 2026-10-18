@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RakshaNet Live SOS Tracking</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --card-bg: #181a26;
+            --card-border: #26293d;
+            --accent-pink: #E91E8C;
+            --accent-glow: rgba(233, 30, 140, 0.35);
+            --text-primary: #ffffff;
+            --text-secondary: #9da3ba;
+            --danger-red: #ef4444;
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Top Nav / Banner */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--card-border);
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            font-size: 22px;
+            color: var(--accent-pink);
+        }
+
+        .brand-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(233, 30, 140, 0.15);
+            color: var(--accent-pink);
+            border: 1px solid var(--accent-pink);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-pink);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-pink);
+            animation: pulse-animation 1.5s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(233, 30, 140, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(233, 30, 140, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(233, 30, 140, 0); }
+        }
+
+        /* Main Content Layout */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 14px;
+            gap: 14px;
+        }
+
+        /* Emergency Call 112 Button */
+        .call-container {
+            width: 100%;
+        }
+
+        .call-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #E91E8C 0%, #C2185B 100%);
+            color: #ffffff;
+            font-size: 1.25rem;
+            font-weight: 800;
+            text-decoration: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all 0.2s ease;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .call-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(233, 30, 140, 0.5);
+            background: linear-gradient(135deg, #f02595 0%, #d81b60 100%);
+        }
+
+        .call-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Info Card */
+        .info-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .street-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        .meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .update-time {
+            color: #a5b4fc;
+            font-weight: 600;
+        }
+
+        /* Map Container */
+        .map-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            flex: 1;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 380px;
+            z-index: 10;
+        }
+
+        /* Alert Notification Overlay / Status Banners */
+        .alert-state-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            border: 2px solid;
+            margin: auto;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .state-ended {
+            border-color: var(--success-green);
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, var(--card-bg) 100%);
+        }
+
+        .state-cancelled {
+            border-color: var(--warning-amber);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.1) 0%, var(--card-bg) 100%);
+        }
+
+        .state-expired {
+            border-color: var(--text-secondary);
+            background: linear-gradient(180deg, rgba(157, 163, 186, 0.1) 0%, var(--card-bg) 100%);
+        }
+
+        .state-not_found {
+            border-color: var(--danger-red);
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.1) 0%, var(--card-bg) 100%);
+        }
+
+        .state-icon {
+            font-size: 48px;
+        }
+
+        .state-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .state-desc {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Custom pulsing marker */
+        .pulse-marker-container {
+            width: 24px;
+            height: 24px;
+            position: relative;
+        }
+        .pulse-marker-core {
+            width: 16px;
+            height: 16px;
+            background-color: var(--accent-pink);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            box-shadow: 0 0 10px var(--accent-pink);
+        }
+        .pulse-marker-wave {
+            width: 32px;
+            height: 32px;
+            background-color: rgba(233, 30, 140, 0.4);
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            animation: pulse-marker-anim 1.8s infinite;
+        }
+
+        @keyframes pulse-marker-anim {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* Disclaimer Footer */
+        footer {
+            text-align: center;
+            padding: 16px;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            border-top: 1px solid var(--card-border);
+            background-color: var(--card-bg);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand-container">
+            <span class="brand-icon">🛡️</span>
+            <span class="brand-title">RakshaNet Live SOS</span>
+        </div>
+        <div id="statusBadge" class="live-badge">
+            <span class="pulse-dot"></span>
+            <span id="statusBadgeText">LIVE TRACKING</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- Large Prominent Call 112 Button -->
+        <div class="call-container">
+            <a href="tel:112" class="call-btn" id="call112Btn">
+                <span>🚨</span>
+                <span>Call Emergency 112</span>
+            </a>
+        </div>
+
+        <!-- Terminal Status Card (Shown if ended, cancelled, expired, or not found) -->
+        <div id="statusCard" class="alert-state-card {% if status == 'active' %}hidden{% else %}state-{{ status }}{% endif %}">
+            <div id="stateIcon" class="state-icon">
+                {% if status == 'ended' %}✅
+                {% elif status == 'cancelled' %}⚠️
+                {% elif status == 'expired' %}⏳
+                {% elif status == 'not_found' %}❌
+                {% else %}ℹ️{% endif %}
+            </div>
+            <h2 id="stateTitle" class="state-title">
+                {% if status == 'ended' %}Alert Ended
+                {% elif status == 'cancelled' %}Alert Cancelled
+                {% elif status == 'expired' %}Link Expired
+                {% elif status == 'not_found' %}Link Not Found
+                {% else %}{{ status|capitalize }}{% endif %}
+            </h2>
+            <p id="stateMessage" class="state-desc">
+                {% if message %}{{ message }}
+                {% elif status == 'ended' %}This alert has ended. The person has marked themselves safe.
+                {% elif status == 'cancelled' %}This alert was cancelled
+                {% elif status == 'expired' %}This link has expired
+                {% elif status == 'not_found' %}Link not found
+                {% else %}This tracking session is no longer active.{% endif %}
+            </p>
+        </div>
+
+        <!-- Active Tracking Info & Map Container -->
+        <div id="activeTrackingContainer" class="{% if status != 'active' %}hidden{% endif %}" style="display: flex; flex-direction: column; gap: 14px; flex: 1;">
+            <div class="info-card">
+                <div class="info-label">Current Emergency Location</div>
+                <div id="streetName" class="street-name">
+                    {{ initial_data.street_name if initial_data and initial_data.street_name else 'Locating current street...' }}
+                </div>
+                <div class="meta-row">
+                    <span>Status: <strong style="color: var(--accent-pink);">Active Emergency</strong></span>
+                    <span>Updated: <span id="updatedAt" class="update-time">{{ initial_data.updated_at if initial_data and initial_data.updated_at else 'Just now' }}</span></span>
+                </div>
+            </div>
+
+            <div class="map-card">
+                <div id="map"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        RakshaNet Emergency Tracking • Real-time location updates • OpenStreetMap
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        const TRACK_TOKEN = {{ token|tojson }};
+        const POLL_INTERVAL = {{ poll_interval|default(5) }} * 1000;
+        let initialStatus = {{ status|tojson }};
+
+        let map = null;
+        let currentMarker = null;
+        let trailPolyline = null;
+        let pollTimer = null;
+
+        // Custom pulsing marker icon
+        const pulsingIcon = L.divIcon({
+            className: 'custom-pulse-marker',
+            html: '<div class="pulse-marker-container"><div class="pulse-marker-wave"></div><div class="pulse-marker-core"></div></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+
+        function initMap(lat, lon, trail) {
+            if (map) return;
+            const center = [lat || 28.5433, lon || 77.2065];
+            map = L.map('map', {
+                center: center,
+                zoom: 16,
+                zoomControl: true
+            });
+
+            // Dark-styled / standard OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Trail polyline
+            const trailCoords = (trail && trail.length > 0) ? trail : (lat && lon ? [[lat, lon]] : []);
+            trailPolyline = L.polyline(trailCoords, {
+                color: '#E91E8C',
+                weight: 5,
+                opacity: 0.85,
+                dashArray: '2, 6',
+                lineJoin: 'round'
+            }).addTo(map);
+
+            if (lat && lon) {
+                currentMarker = L.marker([lat, lon], { icon: pulsingIcon }).addTo(map);
+                currentMarker.bindPopup("<b>Current Emergency Location</b>").openPopup();
+                map.setView([lat, lon], 16);
+            }
+        }
+
+        function updateTrackingUI(data) {
+            const streetNameEl = document.getElementById('streetName');
+            const updatedAtEl = document.getElementById('updatedAt');
+
+            if (streetNameEl && data.street_name) {
+                streetNameEl.textContent = data.street_name;
+            }
+            if (updatedAtEl && data.updated_at) {
+                updatedAtEl.textContent = data.updated_at;
+            }
+
+            if (data.last_lat && data.last_lon) {
+                const newPos = [data.last_lat, data.last_lon];
+                if (!map) {
+                    initMap(data.last_lat, data.last_lon, data.trail);
+                } else {
+                    if (currentMarker) {
+                        currentMarker.setLatLng(newPos);
+                    } else {
+                        currentMarker = L.marker(newPos, { icon: pulsingIcon }).addTo(map);
+                    }
+                    if (trailPolyline && data.trail && data.trail.length > 0) {
+                        trailPolyline.setLatLngs(data.trail);
+                    }
+                    map.panTo(newPos, { animate: true, duration: 1.0 });
+                }
+            }
+        }
+
+        function showTerminalState(status, message) {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+
+            const activeContainer = document.getElementById('activeTrackingContainer');
+            const statusCard = document.getElementById('statusCard');
+            const statusBadge = document.getElementById('statusBadge');
+            const statusBadgeText = document.getElementById('statusBadgeText');
+            const stateIcon = document.getElementById('stateIcon');
+            const stateTitle = document.getElementById('stateTitle');
+            const stateMessage = document.getElementById('stateMessage');
+
+            if (activeContainer) activeContainer.classList.add('hidden');
+            if (statusCard) {
+                statusCard.className = `alert-state-card state-${status}`;
+                statusCard.classList.remove('hidden');
+            }
+
+            if (status === 'ended') {
+                stateIcon.textContent = '✅';
+                stateTitle.textContent = 'Alert Ended';
+                stateMessage.textContent = message || 'This alert has ended. The person has marked themselves safe.';
+                statusBadge.style.borderColor = 'var(--success-green)';
+                statusBadge.style.color = 'var(--success-green)';
+                statusBadgeText.textContent = 'ALERT RESOLVED';
+            } else if (status === 'cancelled') {
+                stateIcon.textContent = '⚠️';
+                stateTitle.textContent = 'Alert Cancelled';
+                stateMessage.textContent = message || 'This alert was cancelled';
+                statusBadge.style.borderColor = 'var(--warning-amber)';
+                statusBadge.style.color = 'var(--warning-amber)';
+                statusBadgeText.textContent = 'CANCELLED';
+            } else if (status === 'expired') {
+                stateIcon.textContent = '⏳';
+                stateTitle.textContent = 'Link Expired';
+                stateMessage.textContent = message || 'This link has expired';
+                statusBadge.style.borderColor = 'var(--text-secondary)';
+                statusBadge.style.color = 'var(--text-secondary)';
+                statusBadgeText.textContent = 'EXPIRED';
+            } else {
+                stateIcon.textContent = '❌';
+                stateTitle.textContent = 'Link Not Found';
+                stateMessage.textContent = message || 'Link not found';
+                statusBadge.style.borderColor = 'var(--danger-red)';
+                statusBadge.style.color = 'var(--danger-red)';
+                statusBadgeText.textContent = 'NOT FOUND';
+            }
+        }
+
+        async function pollTrackAPI() {
+            try {
+                const resp = await fetch(`/api/track/${encodeURIComponent(TRACK_TOKEN)}`);
+                if (resp.status === 404) {
+                    showTerminalState('not_found', 'Link not found');
+                    return;
+                }
+                if (!resp.ok) {
+                    console.warn('Track API status:', resp.status);
+                    return;
+                }
+                const data = await resp.json();
+                if (data.status === 'active' || data.status === 'countdown') {
+                    updateTrackingUI(data);
+                } else if (data.status === 'ended' || data.status === 'cancelled' || data.status === 'expired') {
+                    showTerminalState(data.status, data.message);
+                }
+            } catch (err) {
+                console.error('Error fetching live tracking update:', err);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            {% if status == 'active' and initial_data %}
+            const initLat = {{ initial_data.last_lat|tojson }};
+            const initLon = {{ initial_data.last_lon|tojson }};
+            const initTrail = {{ initial_data.trail|tojson }};
+            initMap(initLat, initLon, initTrail);
+            // Start polling
+            pollTimer = setInterval(pollTrackAPI, POLL_INTERVAL);
+            {% elif status != 'active' %}
+            showTerminalState({{ status|tojson }}, {{ message|tojson }});
+            {% endif %}
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<USER_REQUEST>
+Note: I just added typeable search for the start/end fields and /api/nearest labelling. In Part 0, skip anything that is already implemented (check first, don't rewrite working code) and do only what's still missing. Part 0 item 1 (divergent demo presets) is still needed.
+
+Phase 1 (route planner) is done and working. Same project, same stack (Flask, SQLite, vanilla JS + Leaflet, OSMnx/NetworkX). Do NOT break Phase 1. Now build PHASE 2: incident reporting, community verification (voting), and the community safety feed. SOS/Twilio is still NOT in scope.
+
+## Part 0: small Phase 1 fixes (do these first)
+1. Add 3 demo route presets in config.py (button list "Demo routes") where the shortest and safest routes clearly DIVERGE at 22:00 (safest should avoid a low-lit lane/cluster of incidents). Verify programmatically: for each preset print distance and route overlap % at 18:00 and 23:00. Recalibrate seed clusters/K if routes overlap more than ~70%. Also verify that at 18:00 there are visibly SAFE (green) segments and that several segments change band by 23:00.
+2. Label start/end by the nearest street name instead of raw coordinates (add GET /api/nearest?lat&lon -> {street_name, edge_id, snapped_lat, snapped_lon, in_area}).
+3. Add a small "Demo data: seeded" badge in the UI footer.
+
+## Part 1: Auth (lightweight, hackathon-grade)
+- Flask sessions + werkzeug password hashing. Endpoints: POST /api/auth/register (name, phone-or-email, password), POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me.
+- Seed 5 demo users (Asha, Riya, Meera, Kabir, Zoya) with a known demo password.
+- DEMO_MODE flag in config.py (default True): shows an "Acting as: [user]" switcher in the UI so I can demo two different users voting without logging out and in. Also in DEMO_MODE the browser location check can be simulated (see Part 3).
+- Additive DB migration only (inspect the existing schema first, ALTER TABLE or create missing tables). Do not drop or recreate existing tables or lose seed data.
+
+## Part 2: Incident reporting
+- Schema (extend existing incidents table): reporter_id, edge_id (snapped), lat, lon, type (harassment | poor_lighting | unsafe_area | other), incident_time (when it happened), note (optional, max 200 chars), status (pending | verified | rejected), upvotes (count of distinct confirming users), created_at, verified_at. New table incident_votes(id, incident_id, user_id, voter_lat, voter_lon, distance_m, created_at, UNIQUE(incident_id, user_id)).
+- POST /api/incidents (login required): validates the point is inside the area bbox, snaps to nearest edge, saves as status=pending. The reporter counts as the first confirmation, but the reporter CANNOT cast an additional vote on their own report.
+- Anti-abuse rules: max 5 reports per user per hour; if a report of the same type already exists within 50 m in the last 2 hours, return 409 with that incident's id and prompt the user to confirm the existing one instead of creating a duplicate; reject incident_time in the future or older than 30 days; note text is sanitized and length-limited.
+- GET /api/incidents?status=&hours=&lat=&lon=&radius= returns incidents (verified only for the public map; pending only returned via the verify endpoint below).
+
+## Part 3: Verification (voting)
+- POST /api/incidents/<id>/vote (login required). Rules, each with a clear error message: not the reporter; one vote per user per incident (UNIQUE constraint + friendly error); voter must be within VOTE_RADIUS_M (default 500 m) of the incident, using the browser's geolocation sent with the vote; in DEMO_MODE allow a simulated location (a "simulate my location here" option / click on the map) so the demo works indoors.
+- Threshold: status flips pending -> verified when distinct confirming users (reporter + voters) >= VERIFY_THRESHOLD (default 3 total, meaning the report plus 2 other distinct users, matching "2+ community confirmations"). Make this configurable. Store verified_at.
+- Votes on already-verified incidents still count as additional confirmations (shown in the feed) but do not change status.
+- GET /api/incidents/pending?lat=&lon=&radius= returns pending reports near the user for the "Verify nearby" list.
+
+## Part 4: Scoring integration (this is the payoff)
+- When an incident becomes verified, update scores for the affected edge(s) and neighbors within ~100 m, then refresh the in-memory 24-hour score cache incrementally (do NOT recompute the whole graph if avoidable; if full recompute is under ~2 s it is acceptable).
+- Incident component: penalty per verified incident in the last 30 days, with time-awareness: full penalty for hours within +-3 h of the incident_time hour, half penalty otherwise; penalty decays with age (e.g. linear over 30 days).
+- Verified poor_lighting reports reduce the LIGHTING component of that edge (not just the incident component).
+- After verification the main map should show a pin for the incident, and re-running the same route should show the changed scores (and possibly a different safest route). This is the demo moment: file report -> pending -> two other users confirm -> pin goes live -> route score drops/changes.
+
+## Part 5: Frontend
+- Convert the left sidebar into 3 tabs: Route | Report | Verify & Feed. Keep the SOS button floating on every tab.
+- Login/register modal; header shows the current user; DEMO_MODE shows the "Acting as" switcher.
+- Report tab: pick the location by clicking the map (show snapped street name), choose type, choose when it happened (Now / 1 h ago / Earlier today / custom datetime), optional note, Submit. Show success state: "Submitted. Needs 2 more confirmations to go live." Handle the 409 duplicate case by offering to confirm the existing report.
+- Verify & Feed tab, two sections: (a) "Needs verification nearby": pending reports with type, time, distance from the user's (real or simulated) location, a "I saw this too" button, and a progress indicator like 1/3 confirmed. Show pending reports as grey markers on the map ONLY while this tab is open. (b) "Verified incidents": feed sorted by recency (toggle: nearest first), each item shows type icon, street name, time, confirmation count, and an "I saw this too" button. Filters: last 24 h / 7 days / 30 days and by type.
+- Verified incidents appear on the main map as pins (icon per type) with a popup (type, time, confirmations). Pending reports are NEVER shown on the main map outside the Verify tab.
+- Toasts for all errors (too far away, already voted, own report, rate limit).
+- Keep the existing dark UI with accent #E91E8C.
+
+## Part 6: Tests and verification
+- Add pytest tests for: self-vote rejected, duplicate vote rejected, far-away vote rejected, threshold flips status exactly at the configured count, pending incidents don't affect scores, verification changes the edge score, rate limit enforced, duplicate-report detection.
+- Add a scripted end-to-end check (script or test) that simulates the demo: user A reports on a lane on the safest demo route, users B and C vote, status becomes verified, the route score at 23:00 drops versus before.
+- Update README with: new endpoints, config flags (DEMO_MODE, VERIFY_THRESHOLD, VOTE_RADIUS_M), and a Phase 2 demo script.
+
+## Process
+Give me a short plan first, then implement in milestones: (0) Part 0 fixes, (1) auth + migration, (2) reporting API, (3) voting API + threshold, (4) scoring integration, (5) frontend tabs, (6) tests + README. Run and verify after each milestone, and do not add features beyond this scope. Ask me if anything is ambiguous.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-13T22:33:49+05:30.
+
+The user's current state is as follows:
+Active Document: c:\RakshaNet\config.py (LANGUAGE_PYTHON)
+Cursor is on line: 45
+Other open documents:
+- c:\RakshaNet\config.py (LANGUAGE_PYTHON)
+- c:\RakshaNet\verify_search.py (LANGUAGE_PYTHON)
+Browser State:
+  Page 58E63F4D63F372444BA8951A3583B5F5 (RakshaNet — Safe Route Planner for Women | Delhi) - http://localhost:5000/ [ACTIVE]
+    Viewport: 1536x730, Page Height: 729
+</ADDITIONAL_METADATA>

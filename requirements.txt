@@ -1,0 +1,7 @@
+flask>=3.0.0
+flask-cors>=4.0.0
+osmnx>=1.9.0
+networkx>=3.2
+shapely>=2.0.0
+requests>=2.31.0
+# twilio>=8.0.0 (optional: only required if SOS_PROVIDER=twilio)

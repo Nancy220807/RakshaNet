@@ -1,0 +1,45 @@
+{
+  "Hauz Khas Village \u2192 Green Park Metro": {
+    "18": {
+      "short_dist": 2314.3,
+      "short_score": 69.3,
+      "safe_dist": 2397.4,
+      "safe_score": 77.8
+    },
+    "23": {
+      "short_dist": 2314.3,
+      "short_score": 51.4,
+      "safe_dist": 2397.4,
+      "safe_score": 57.4
+    }
+  },
+  "Safdarjung Enclave \u2192 Deer Park": {
+    "18": {
+      "short_dist": 1240.3,
+      "short_score": 62.7,
+      "safe_dist": 1271.1,
+      "safe_score": 72.5
+    },
+    "23": {
+      "short_dist": 1240.3,
+      "short_score": 47.7,
+      "safe_dist": 1266.2,
+      "safe_score": 53.6
+    }
+  },
+  "Deer Park Lake \u2192 Safdarjung Club": {
+    "18": {
+      "short_dist": 1033.7,
+      "short_score": 66.2,
+      "safe_dist": 1085.3,
+      "safe_score": 77.1
+    },
+    "23": {
+      "short_dist": 1033.7,
+      "short_score": 50.3,
+      "safe_dist": 1052.9,
+      "safe_score": 56.2
+    }
+  },
+  "search_hauz": 6
+}

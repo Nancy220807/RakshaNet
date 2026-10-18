@@ -1,0 +1,685 @@
+/**
+ * sos.css — Smart SOS Frontend Styles (Phase 3 Milestone 6)
+ * Strict requirement: All CSS classes and element IDs must begin with "sos-".
+ */
+
+:root {
+  --sos-bg: #0f111a;
+  --sos-card-bg: #181a26;
+  --sos-border: #26293d;
+  --sos-accent: #E91E8C;
+  --sos-accent-glow: rgba(233, 30, 140, 0.4);
+  --sos-danger: #ef4444;
+  --sos-success: #10b981;
+  --sos-warning: #f59e0b;
+  --sos-info: #6366f1;
+  --sos-text: #ffffff;
+  --sos-text-muted: #9da3ba;
+}
+
+/* ── Fullscreen Overlay Backdrop ─────────────────────────────────────────── */
+.sos-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 18, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.sos-hidden {
+  display: none !important;
+}
+
+/* ── Countdown Card ──────────────────────────────────────────────────────── */
+.sos-countdown-card {
+  background: var(--sos-card-bg);
+  border: 2px solid var(--sos-accent);
+  border-radius: 20px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 12px 40px var(--sos-accent-glow);
+  animation: sos-fade-in 0.25s ease-out;
+  box-sizing: border-box;
+}
+
+@keyframes sos-fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.sos-countdown-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--sos-text);
+  letter-spacing: -0.02em;
+}
+
+.sos-countdown-desc {
+  font-size: 0.88rem;
+  color: var(--sos-text-muted);
+  line-height: 1.4;
+}
+
+.sos-countdown-number {
+  font-size: 5.5rem;
+  font-weight: 900;
+  color: var(--sos-accent);
+  line-height: 1;
+  margin: 10px 0;
+  text-shadow: 0 0 30px var(--sos-accent);
+  animation: sos-pulse-num 1s infinite alternate;
+}
+
+@keyframes sos-pulse-num {
+  from { transform: scale(0.96); }
+  to { transform: scale(1.05); }
+}
+
+.sos-countdown-bar-wrap {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.sos-countdown-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sos-accent), #f43f5e);
+  width: 100%;
+  transition: width 1s linear;
+}
+
+.sos-loc-choice-box {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--sos-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.sos-loc-choice-box label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--sos-text);
+}
+
+.sos-cancel-btn {
+  width: 100%;
+  padding: 16px;
+  background: #25283b;
+  border: 2px solid #3b3f5c;
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sos-cancel-btn:hover {
+  background: #32364f;
+  border-color: #555a80;
+  transform: translateY(-1px);
+}
+
+/* ── Active SOS Panel (Full Screen / Mobile First) ────────────────────────── */
+.sos-active-panel {
+  background: var(--sos-card-bg);
+  border: 1px solid var(--sos-border);
+  border-radius: 20px;
+  padding: 24px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
+}
+
+.sos-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--sos-border);
+  padding-bottom: 12px;
+}
+
+.sos-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(233, 30, 140, 0.15);
+  border: 1px solid var(--sos-accent);
+  color: var(--sos-accent);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sos-pulse-circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sos-accent);
+  box-shadow: 0 0 10px var(--sos-accent);
+  animation: sos-pulse-badge 1.4s infinite;
+}
+
+@keyframes sos-pulse-badge {
+  0% { transform: scale(0.9); opacity: 1; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+
+/* ── Emergency Call 112 ─────────────────────────────────────────────────── */
+.sos-call-112-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #E91E8C 0%, #C2185B 100%);
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  border-radius: 12px;
+  text-decoration: none;
+  box-shadow: 0 6px 20px var(--sos-accent-glow);
+  border: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.sos-call-112-btn:hover {
+  background: linear-gradient(135deg, #f02595 0%, #d81b60 100%);
+  transform: translateY(-1px);
+}
+
+/* ── Section Cards inside Active Panel ───────────────────────────────────── */
+.sos-section-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--sos-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sos-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sos-text-muted);
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Contacts notification items */
+.sos-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sos-contact-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--sos-card-bg);
+  border: 1px solid var(--sos-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.sos-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sos-contact-name {
+  font-weight: 700;
+  color: var(--sos-text);
+}
+
+.sos-contact-meta {
+  font-size: 0.75rem;
+  color: var(--sos-text-muted);
+}
+
+.sos-status-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.sos-tag-sent {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--sos-success);
+}
+
+.sos-tag-simulated {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.sos-tag-failed {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--sos-danger);
+}
+
+.sos-wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #25D366;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.sos-wa-btn:hover {
+  opacity: 0.9;
+}
+
+.sos-sms-fail-warning {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--sos-danger);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+/* Copy tracking link button */
+.sos-copy-link-btn {
+  background: #262a3f;
+  border: 1px solid #3d4364;
+  color: var(--sos-text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.sos-copy-link-btn:hover {
+  background: #343954;
+}
+
+/* Responders section */
+.sos-responders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sos-responder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--sos-card-bg);
+  border: 1px solid var(--sos-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.sos-responder-status {
+  font-weight: 600;
+}
+
+.sos-status-on-way {
+  color: var(--sos-success);
+}
+
+.sos-status-notified {
+  color: #a5b4fc;
+}
+
+.sos-status-declined {
+  color: var(--sos-text-muted);
+}
+
+/* Mini Map */
+.sos-mini-map-wrap {
+  width: 100%;
+  height: 220px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--sos-border);
+  position: relative;
+}
+
+#sos-mini-map {
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.sos-sharing-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  background: rgba(15, 17, 26, 0.88);
+  border: 1px solid var(--sos-accent);
+  color: var(--sos-accent);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+}
+
+/* Resolve Buttons */
+.sos-resolve-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.sos-btn-safe {
+  background: var(--sos-success);
+  color: #ffffff;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sos-btn-safe:hover {
+  background: #0ea371;
+}
+
+.sos-btn-false-alarm {
+  background: transparent;
+  color: var(--sos-text-muted);
+  border: 1px solid var(--sos-border);
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sos-btn-false-alarm:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--sos-text);
+  border-color: #4b5275;
+}
+
+/* ── Safety Settings Modal ───────────────────────────────────────────────── */
+.sos-modal-dialog {
+  background: var(--sos-card-bg);
+  border: 1px solid var(--sos-border);
+  border-radius: 18px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.sos-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: var(--sos-text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.sos-modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--sos-text);
+}
+
+.sos-contacts-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sos-contact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--sos-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.sos-contact-del-btn {
+  background: transparent;
+  border: none;
+  color: var(--sos-danger);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+}
+
+.sos-add-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--sos-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.sos-input-field {
+  background: #0f111a;
+  border: 1px solid var(--sos-border);
+  border-radius: 6px;
+  color: var(--sos-text);
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sos-input-field:focus {
+  border-color: var(--sos-accent);
+}
+
+.sos-btn-secondary {
+  background: #25283b;
+  border: 1px solid #3b3f5c;
+  color: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sos-btn-secondary:hover {
+  background: #31354d;
+}
+
+.sos-disclaimer-box {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  color: #fbbf24;
+  line-height: 1.4;
+}
+
+/* ── DEMO_MODE Responder Inbox Panel ─────────────────────────────────────── */
+.sos-inbox-container {
+  position: fixed;
+  bottom: 105px;
+  right: 28px;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.sos-inbox-toggle-btn {
+  background: #181a26;
+  border: 2px solid var(--sos-accent);
+  color: var(--sos-text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s;
+}
+
+.sos-inbox-toggle-btn:hover {
+  transform: translateY(-2px);
+}
+
+.sos-inbox-count-badge {
+  background: var(--sos-accent);
+  color: #ffffff;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.sos-inbox-popup {
+  background: var(--sos-card-bg);
+  border: 1px solid var(--sos-border);
+  border-radius: 14px;
+  padding: 16px;
+  width: 320px;
+  max-height: 380px;
+  overflow-y: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: sos-fade-in 0.2s ease-out;
+}
+
+.sos-inbox-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--sos-border);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.sos-inbox-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sos-btn-respond-accept {
+  flex: 1;
+  background: var(--sos-success);
+  color: #ffffff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sos-btn-respond-decline {
+  flex: 1;
+  background: transparent;
+  color: var(--sos-text-muted);
+  border: 1px solid var(--sos-border);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+/* Custom pulsing responder marker */
+.sos-responder-pin {
+  width: 22px;
+  height: 22px;
+  background: var(--sos-success);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--sos-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
