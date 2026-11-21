@@ -170,6 +170,8 @@ score(edge, hour) =
 - **Lighting Degradation**: Verified `poor_lighting` reports directly reduce the lighting component by 40 points on that street.
 - **Anti-Abuse**: Unverified (pending) reports exert 0 penalty.
 
+---
+
 ## 👩‍💻 Team
 
 **RakshaNet** — DevDiva Jam 2026, Women Safety & Security track  
